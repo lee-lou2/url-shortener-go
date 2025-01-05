@@ -24,6 +24,7 @@ pub struct CreateUrlRequest {
 #[derive(Serialize)]
 pub struct CreateUrlResponse {
     pub is_created: bool,
+    pub short_url: String,
 }
 
 /// ShortUrl struct

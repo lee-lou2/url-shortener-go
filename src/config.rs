@@ -12,6 +12,7 @@ pub struct Environment {
     pub email_password: String,
     pub email_host: String,
     pub email_port: String,
+    pub jwt_secret: String,
 }
 
 // Lazy를 통해 최초 접근 시점에만 .env를 로드하고 Environment를 초기화
@@ -29,6 +30,7 @@ static ENVIRONMENTS: Lazy<Environment> = Lazy::new(|| {
         email_password: env::var("EMAIL_PASSWORD").unwrap_or_else(|_| "".to_string()),
         email_host: env::var("EMAIL_HOST").unwrap_or_else(|_| "".to_string()),
         email_port: env::var("EMAIL_PORT").unwrap_or_else(|_| "".to_string()),
+        jwt_secret: env::var("JWT_SECRET").unwrap_or_else(|_| "".to_string()),
     }
 });
 

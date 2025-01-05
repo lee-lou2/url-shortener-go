@@ -154,22 +154,27 @@ pub fn split_short_key(short_key: &str) -> (String, String) {
 - URL submission and customization UI
 
 #### 2. `POST /v1/urls`
+
 Creates short URLs through:
+
 1. **Input Validation**
-   - URL format and accessibility checks
+    - URL format and accessibility checks
 
 2. **URL Processing**
-   - Combines platform-specific URLs
-   - Generates unique hash
+    - Combines platform-specific URLs
+    - Generates unique hash
 
-3. **Email Verification**
-   - For existing URLs:
-      - Returns verification status
-      - Resends verification if pending
-   - For new URLs:
-      - Creates unverified URL
-      - Sends verification email
-      - Fetches og tags if not provided
+3. **Email Verification** *(Optional when using JWT token)*
+    - If JWT token is provided:
+        - Bypasses email verification
+        - Creates and returns the short URL immediately
+    - For existing URLs:
+        - Returns verification status
+        - Resends verification if pending
+    - For new URLs (without JWT token):
+        - Creates unverified URL
+        - Sends verification email
+        - Fetches og tags if not provided
 
 #### 3. `GET /v1/verify/{code}`
 Handles verification:
@@ -217,6 +222,8 @@ Manages redirects:
    EMAIL_PASSWORD=
    EMAIL_HOST=
    EMAIL_PORT=
+   
+   JWT_SECRET=
    ```
 
 3. Set up email templates:

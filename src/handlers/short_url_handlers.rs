@@ -9,11 +9,13 @@ use axum::{
     http::StatusCode,
     response::IntoResponse,
     Json,
+    Extension,
 };
 use lettre::{transport::smtp::authentication::Credentials, Message, SmtpTransport, Transport};
 use scraper::Html as ScraperHtml;
 use sha2::{Digest, Sha256};
 use chrono::{Utc, Duration};
+use crate::middlewares::auth_middlewares::Claims;
 
 
 /// Send Email
@@ -71,8 +73,11 @@ fn extract_head_html(html: &str) -> String {
 /// URL shortening handler
 pub async fn create_short_url_handler(
     State(state): State<AppState>,
+    Extension(claims): Extension<Claims>,
     Json(payload): Json<CreateUrlRequest>,
 ) -> impl IntoResponse {
+    let envs = crate::config::get_environments();
+
     // Data validation
     fn validate_data(payload: &CreateUrlRequest) -> Result<bool, String> {
         validate_email(&payload.email)?;
@@ -113,7 +118,10 @@ pub async fn create_short_url_handler(
         .await {
         Ok(Some(record)) => {
             if record.is_verified == 1 {
-                return (StatusCode::CONFLICT, "Email is already verified.").into_response();
+                return (StatusCode::CONFLICT, "이미 사용되고 있는 URL 입니다").into_response();
+            }
+            if record.email != payload.email {
+                return (StatusCode::CONFLICT, "이미 생성 요청된 URL 입니다").into_response();
             }
             let id = record.id.unwrap();
             let unique_key = match id_to_key(id) {
@@ -136,12 +144,21 @@ pub async fn create_short_url_handler(
             )
                 .execute(&state.db_pool)
                 .await;
+
             tokio::spawn(async move {
                 if let Err(e) = send_email(record.email, code).await {
                     eprintln!("Failed to send email: {}", e);
                 }
             });
-            let response = CreateUrlResponse { is_created: false };
+
+            let protocol = &envs.server_protocol;
+            let host = &envs.server_host;
+            let port = &envs.server_port;
+            let domain = if port != "80" && port != "443" { format!("{}:{}", host, port) } else { host.to_string() };
+            let response = CreateUrlResponse {
+                is_created: false,
+                short_url: format!("{}://{}/{}", protocol, domain, short_key),
+            };
             return (StatusCode::CREATED, Json(response)).into_response();
         },
         Ok(None) => {
@@ -157,13 +174,17 @@ pub async fn create_short_url_handler(
 
     // create pending short url
     let random_key = generate_random_string(4);
+    let mut is_verified = 0;
+    if claims.sub != "" {
+        is_verified = 1;
+    }
     let result = sqlx::query!(
         r#"
         INSERT INTO urls (
             random_key, email, ios_deep_link, ios_fallback_url,
             android_deep_link, android_fallback_url, default_fallback_url,
-            hashed_value, webhook_url, head_html
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            hashed_value, webhook_url, head_html, is_verified
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         "#,
         random_key,
         payload.email,
@@ -174,7 +195,8 @@ pub async fn create_short_url_handler(
         payload.default_fallback_url,
         hashed_value,
         payload.webhook_url,
-        payload.head_html
+        payload.head_html,
+        is_verified
     )
         .execute(&state.db_pool)
         .await;
@@ -188,10 +210,11 @@ pub async fn create_short_url_handler(
             };
             // Add to cache
             let short_key = merge_short_key(&random_key, &unique_key);
-            let code = generate_random_string(8);
-            let expires_at = Utc::now() + Duration::minutes(5);
-            let expires_at_str = expires_at.naive_utc().to_string();
-            let _ = sqlx::query!(
+            if claims.sub == "" {
+                let code = generate_random_string(8);
+                let expires_at = Utc::now() + Duration::minutes(5);
+                let expires_at_str = expires_at.naive_utc().to_string();
+                let _ = sqlx::query!(
                 r#"
                 INSERT INTO email_auth (short_key, code, expires_at) VALUES (?, ?, ?)
                 "#,
@@ -199,15 +222,18 @@ pub async fn create_short_url_handler(
                 code,
                 expires_at_str
             )
-                .execute(&state.db_pool)
-                .await;
-            tokio::spawn(async move {
-                if let Err(e) = send_email(payload.email, code).await {
-                    println!("Failed to send email: {}", e);
-                }
+                    .execute(&state.db_pool)
+                    .await;
+                tokio::spawn(async move {
+                    if let Err(e) = send_email(payload.email, code).await {
+                        println!("Failed to send email: {}", e);
+                    }
+                });
+            }
 
-                // If Head is not provided during creation request, fetch the default URL's Head code and apply it
-                if payload.head_html.is_empty() {
+            // If Head is not provided during creation request, fetch the default URL's Head code and apply it
+            if payload.head_html.is_empty() {
+                tokio::spawn(async move {
                     let client = reqwest::Client::new();
                     match client.get(&payload.default_fallback_url).send().await {
                         Ok(response) => {
@@ -227,10 +253,16 @@ pub async fn create_short_url_handler(
                         }
                         Err(e) => println!("Failed to fetch head HTML: {}", e),
                     }
-                }
-            });
+                });
+            }
+
+            let protocol = &envs.server_protocol;
+            let host = &envs.server_host;
+            let port = &envs.server_port;
+            let domain = if port != "80" && port != "443" { format!("{}:{}", host, port) } else { host.to_string() };
             let response = CreateUrlResponse {
                 is_created: true,
+                short_url: format!("{}://{}/{}", protocol, domain, short_key),
             };
             (StatusCode::CREATED, Json(response)).into_response()
         }

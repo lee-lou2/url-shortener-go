@@ -4,8 +4,10 @@ mod state;
 mod utils;
 mod validators;
 mod config;
+mod middlewares;
 
 use axum::{
+    middleware::from_fn,
     routing::{get, post},
     Router,
 };
@@ -31,7 +33,11 @@ async fn main() -> Result<(), sqlx::Error> {
     let app = Router::new()
         .route("/", get(handlers::page_handlers::index_handler))
         .route("/health", get(handlers::page_handlers::health_check_handler))
-        .route("/v1/urls", post(handlers::short_url_handlers::create_short_url_handler))
+        .route(
+            "/v1/urls",
+            post(handlers::short_url_handlers::create_short_url_handler)
+                .layer(from_fn(middlewares::auth_middlewares::jwt_auth_middleware)),
+        )
         .route("/v1/verify/{code}", get(handlers::verify_handlers::verify_email_handler))
         .route("/{short_key}", get(handlers::redirect_handlers::redirect_to_original_handler))
         .with_state(state)
