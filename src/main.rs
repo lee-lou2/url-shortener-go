@@ -9,9 +9,6 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::sync::RwLock;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -23,10 +20,7 @@ async fn main() -> Result<(), sqlx::Error> {
         .connect("sqlite://sqlite3.db")
         .await
         .expect("Failed to create pool");
-    let state = state::AppState {
-        db_pool,
-        cache: Arc::new(RwLock::new(HashMap::new())),
-    };
+    let state = state::AppState::new(db_pool);
 
     // Initialize logger
     tracing_subscriber::registry()
