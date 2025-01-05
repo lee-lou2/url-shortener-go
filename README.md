@@ -207,6 +207,7 @@ Manages redirects:
 
 2. Configure environment variables:
    ```env
+   SERVER_PROTOCOL=http
    SERVER_HOST=127.0.0.1
    SERVER_PORT=3000
    DATABASE_URL=sqlite://sqlite3.db

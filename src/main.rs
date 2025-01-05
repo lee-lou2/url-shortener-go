@@ -42,7 +42,7 @@ async fn main() -> Result<(), sqlx::Error> {
     let protocol = &envs.server_protocol;
     let host = &envs.server_host;
     let port = &envs.server_port;
-    let listener = tokio::net::TcpListener::bind(format!("{}:{}", host, port))
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
         .await?;
     println!("Server running on {}://{}:{}", protocol, host, port);
     axum::serve(listener, app).await?;
