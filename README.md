@@ -252,7 +252,7 @@ We welcome contributions. To contribute:
 
 ## License
 
-This project is under the MIT License - see LICENSE for details.
+This project is under the MIT License
 
 ## Support
 
