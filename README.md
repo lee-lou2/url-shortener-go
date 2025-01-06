@@ -1,5 +1,7 @@
 # URL Shortener Service
 
+[한국어](README.ko.md) | [English](README.md)
+
 ![alt text](docs/screenshot.png)
 
 🚀 Demo : [https://f-it.kr](https://f-it.kr)
