@@ -2,6 +2,8 @@
 
 ![alt text](docs/screenshot.png)
 
+🚀 Demo : [https://f-it.kr](https://f-it.kr)
+
 ## Introduction
 
 A modern URL shortening service that features deep link handling and platform-specific redirections. The service uses email verification instead of account creation for a streamlined user experience while maintaining security.
