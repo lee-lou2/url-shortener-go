@@ -1,4 +1,5 @@
 use crate::config;
+use crate::middlewares::auth_middlewares::Claims;
 use crate::schemas::short_url_schemas::{CreateUrlRequest, CreateUrlResponse};
 use crate::state::AppState;
 use crate::utils::converter::{id_to_key, merge_short_key};
@@ -8,14 +9,13 @@ use axum::extract::State;
 use axum::{
     http::StatusCode,
     response::IntoResponse,
-    Json,
     Extension,
+    Json,
 };
+use chrono::{Duration, Utc};
 use lettre::{transport::smtp::authentication::Credentials, Message, SmtpTransport, Transport};
 use scraper::Html as ScraperHtml;
 use sha2::{Digest, Sha256};
-use chrono::{Utc, Duration};
-use crate::middlewares::auth_middlewares::Claims;
 
 
 /// Send Email
@@ -64,7 +64,12 @@ fn extract_head_html(html: &str) -> String {
     let document = ScraperHtml::parse_document(html);
     let selector = scraper::Selector::parse("head").unwrap();
     if let Some(head) = document.select(&selector).next() {
-        head.html()
+        let head_content = head.html();
+        if head_content.starts_with("<head>") && head_content.ends_with("</head>") {
+            head_content[6..head_content.len() - 7].to_string()
+        } else {
+            head_content
+        }
     } else {
         String::new()
     }
