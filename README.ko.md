@@ -245,9 +245,14 @@ pub fn split_short_key(short_key: &str) -> (String, String) {
    sh init_database.sh
    ```
 
-5. 프로젝트 실행:
+5-1. 프로젝트 직접 실행:
    ```bash
    cargo run
+   ```
+
+5-2. 프로젝트 도커 실행:
+   ```bash
+   sh deploy.sh
    ```
 
 ## 향후 개발 계획

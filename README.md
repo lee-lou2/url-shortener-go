@@ -240,9 +240,14 @@ Manages redirects:
    sh init_database.sh
    ```
 
-5. Run the project:
+5-1. Run the project:
    ```bash
    cargo run
+   ```
+
+5-1. Run the project(Using Docker):
+   ```bash
+   sh deploy.sh
    ```
 
 ## Future Development
