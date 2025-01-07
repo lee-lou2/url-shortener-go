@@ -1,14 +1,14 @@
+use crate::schemas::short_url_schemas::ShortUrl;
 use crate::state::AppState;
 use crate::state::CacheEntry;
 use crate::utils::converter::{key_to_id, split_short_key};
 use axum::{
-    body::Body, extract::Path, extract::State, http::Request, http::StatusCode,
-    response::Html, response::IntoResponse, response::Redirect,
+    body::Body, extract::Path, extract::State, http::Request, http::StatusCode, response::Html,
+    response::IntoResponse, response::Redirect,
 };
 use serde_json::json;
 use std::time::Duration;
 use std::time::Instant;
-use crate::schemas::short_url_schemas::ShortUrl;
 
 /// send web hook
 /// Sends the User-Agent and ShortKey to the webhook URL registered by the user
@@ -19,7 +19,9 @@ async fn send_web_hook(user_agent: &str, short_key: &str, webhook_url: &str) {
         .json(&json!({
             "short_key": short_key,
             "user_agent": user_agent,
-        })).send().await
+        }))
+        .send()
+        .await
     {
         eprintln!("Failed to send webhook: {}", e);
     }
@@ -27,9 +29,7 @@ async fn send_web_hook(user_agent: &str, short_key: &str, webhook_url: &str) {
 
 /// Update Success WebPage
 /// Updates the information of the redirection web page
-fn set_success_page(
-    short_url: &ShortUrl,
-) -> String {
+fn set_success_page(short_url: &ShortUrl) -> String {
     include_str!("../templates/redirect.html")
         .replace("{ios_deep_link}", &short_url.ios_deep_link)
         .replace("{ios_fallback_url}", &short_url.ios_fallback_url)
@@ -63,7 +63,7 @@ pub async fn redirect_to_original_handler(
         if entry.expiry > Instant::now() {
             // Parse entry.data
             let short_url = &entry.data;
-            if short_url.webhook_url != "" {
+            if short_url.webhook_url.is_empty() {
                 let webhook_url = short_url.webhook_url.to_string();
                 tokio::spawn(async move {
                     let user_agent = req
@@ -71,7 +71,7 @@ pub async fn redirect_to_original_handler(
                         .get("User-Agent")
                         .and_then(|header_value| header_value.to_str().ok())
                         .unwrap_or("");
-                    send_web_hook(&user_agent, &short_key, &webhook_url).await;
+                    send_web_hook(user_agent, &short_key, &webhook_url).await;
                 });
             }
             let success_html = set_success_page(short_url);
@@ -97,8 +97,9 @@ pub async fn redirect_to_original_handler(
         "#,
         url_id
     )
-        .fetch_optional(&state.db_pool)
-        .await {
+    .fetch_optional(&state.db_pool)
+    .await
+    {
         Ok(Some(record)) => {
             if record.random_key != request_random_key {
                 return (StatusCode::NOT_FOUND, "URL not found").into_response();
@@ -112,11 +113,14 @@ pub async fn redirect_to_original_handler(
                 webhook_url: record.webhook_url.unwrap_or(String::from("")),
                 head_html: record.head_html.unwrap_or(String::from("")),
             };
-            state.cache.write().await.insert(short_key.clone(), CacheEntry {
-                data: short_url.clone(),
-                expiry: Instant::now() + Duration::from_secs(3600),
-            });
-            if short_url.webhook_url != "" {
+            state.cache.write().await.insert(
+                short_key.clone(),
+                CacheEntry {
+                    data: short_url.clone(),
+                    expiry: Instant::now() + Duration::from_secs(3600),
+                },
+            );
+            if !short_url.webhook_url.is_empty() {
                 // Send the webhook
                 let short_url_clone = short_url.clone();
                 tokio::spawn(async move {
@@ -126,15 +130,13 @@ pub async fn redirect_to_original_handler(
                         .and_then(|header_value| header_value.to_str().ok())
                         .unwrap_or("");
                     let webhook_url = short_url_clone.webhook_url.to_string();
-                    send_web_hook(&user_agent, &short_key, &webhook_url).await;
+                    send_web_hook(user_agent, &short_key, &webhook_url).await;
                 });
             }
             let success_html = set_success_page(&short_url);
             (StatusCode::OK, Html(success_html)).into_response()
         }
-        Ok(None) => {
-            (StatusCode::NOT_FOUND, "URL not found").into_response()
-        }
+        Ok(None) => (StatusCode::NOT_FOUND, "URL not found").into_response(),
         Err(e) => {
             eprintln!("DB Error: {:?}", e);
             StatusCode::INTERNAL_SERVER_ERROR.into_response()

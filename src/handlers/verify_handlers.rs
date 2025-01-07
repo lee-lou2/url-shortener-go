@@ -4,7 +4,6 @@ use crate::utils::converter::{key_to_id, split_short_key};
 use axum::extract::State;
 use axum::{extract::Path, http::StatusCode, response::Html, response::IntoResponse};
 
-
 /// Verify Email Handler
 /// Handler to verify the verification link sent via email
 pub async fn verify_email_handler(
@@ -18,8 +17,9 @@ pub async fn verify_email_handler(
         "#,
         code
     )
-        .fetch_one(&state.db_pool)
-        .await {
+    .fetch_one(&state.db_pool)
+    .await
+    {
         Ok(record) => {
             let (unique_key, random_key) = split_short_key(&record.short_key);
             let url_id = key_to_id(&unique_key).unwrap_or(0);
@@ -32,8 +32,8 @@ pub async fn verify_email_handler(
                 random_key,
                 url_id
             )
-                .execute(&state.db_pool)
-                .await;
+            .execute(&state.db_pool)
+            .await;
 
             match result {
                 Ok(_) => {
@@ -44,7 +44,9 @@ pub async fn verify_email_handler(
                     let port = &envs.server_port;
                     let domain = if port != "80" && port != "443" {
                         format!("{}:{}", host, port)
-                    } else { host.to_string() };
+                    } else {
+                        host.to_string()
+                    };
                     let short_url = format!("{}://{}/{}", protocol, domain, record.short_key);
                     let _ = sqlx::query!(
                         r#"
@@ -52,25 +54,23 @@ pub async fn verify_email_handler(
                         "#,
                         code
                     )
-                        .execute(&state.db_pool)
-                        .await;
-                    let success_html =
-                        include_str!("../templates/verify/success.html").replace("{short_url}", &short_url);
+                    .execute(&state.db_pool)
+                    .await;
+                    let success_html = include_str!("../templates/verify/success.html")
+                        .replace("{short_url}", &short_url);
                     (StatusCode::OK, Html(success_html)).into_response()
                 }
-                Err(_) => {
-                    (
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        Html(include_str!("../templates/verify/error.html"))
-                    ).into_response()
-                }
+                Err(_) => (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Html(include_str!("../templates/verify/error.html")),
+                )
+                    .into_response(),
             }
         }
-        Err(_) => {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Html(include_str!("../templates/verify/failed.html")),
-            ).into_response()
-        }
+        Err(_) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Html(include_str!("../templates/verify/failed.html")),
+        )
+            .into_response(),
     }
 }

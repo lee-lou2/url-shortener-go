@@ -4,19 +4,15 @@ use crate::schemas::short_url_schemas::{CreateUrlRequest, CreateUrlResponse};
 use crate::state::AppState;
 use crate::utils::converter::{id_to_key, merge_short_key};
 use crate::utils::generator::generate_random_string;
-use crate::validators::validate_url::{validate_email, validate_fallback_url, validate_url, validate_webhook_url};
-use axum::extract::State;
-use axum::{
-    http::StatusCode,
-    response::IntoResponse,
-    Extension,
-    Json,
+use crate::validators::validate_url::{
+    validate_email, validate_fallback_url, validate_url, validate_webhook_url,
 };
+use axum::extract::State;
+use axum::{http::StatusCode, response::IntoResponse, Extension, Json};
 use chrono::{Duration, Utc};
 use lettre::{transport::smtp::authentication::Credentials, Message, SmtpTransport, Transport};
 use scraper::Html as ScraperHtml;
 use sha2::{Digest, Sha256};
-
 
 /// Send Email
 /// Send a verification URL via email
@@ -27,9 +23,12 @@ async fn send_email(email: String, code: String) -> Result<(), lettre::transport
     let port = &envs.server_port;
     let domain = if port != "80" && port != "443" {
         format!("{}:{}", host, port)
-    } else { host.to_string() };
+    } else {
+        host.to_string()
+    };
     let email_body = format!(
-        "{}://{}/v1/verify/{}\n\nThis code is valid for 5 minutes.", protocol, domain, code
+        "{}://{}/v1/verify/{}\n\nThis code is valid for 5 minutes.",
+        protocol, domain, code
     );
 
     let from_email = &envs.email_address;
@@ -119,8 +118,9 @@ pub async fn create_short_url_handler(
         "#,
         hashed_value
     )
-        .fetch_optional(&state.db_pool)
-        .await {
+    .fetch_optional(&state.db_pool)
+    .await
+    {
         Ok(Some(record)) => {
             if record.is_verified == 1 {
                 return (StatusCode::CONFLICT, "이미 사용되고 있는 URL 입니다").into_response();
@@ -131,7 +131,10 @@ pub async fn create_short_url_handler(
             let id = record.id.unwrap();
             let unique_key = match id_to_key(id) {
                 Some(key) => key,
-                None => return (StatusCode::INTERNAL_SERVER_ERROR, "ID conversion failed").into_response(),
+                None => {
+                    return (StatusCode::INTERNAL_SERVER_ERROR, "ID conversion failed")
+                        .into_response()
+                }
             };
             let short_key = merge_short_key(&record.random_key, &unique_key);
 
@@ -147,8 +150,8 @@ pub async fn create_short_url_handler(
                 code,
                 expires_at_str
             )
-                .execute(&state.db_pool)
-                .await;
+            .execute(&state.db_pool)
+            .await;
 
             tokio::spawn(async move {
                 if let Err(e) = send_email(record.email, code).await {
@@ -159,28 +162,33 @@ pub async fn create_short_url_handler(
             let protocol = &envs.server_protocol;
             let host = &envs.server_host;
             let port = &envs.server_port;
-            let domain = if port != "80" && port != "443" { format!("{}:{}", host, port) } else { host.to_string() };
+            let domain = if port != "80" && port != "443" {
+                format!("{}:{}", host, port)
+            } else {
+                host.to_string()
+            };
             let response = CreateUrlResponse {
                 is_created: false,
                 short_url: format!("{}://{}/{}", protocol, domain, short_key),
             };
             return (StatusCode::CREATED, Json(response)).into_response();
-        },
+        }
         Ok(None) => {
             // pass
-        },
+        }
         Err(e) => {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 format!("Failed to query database: {}", e),
-            ).into_response();
+            )
+                .into_response();
         }
     }
 
     // create pending short url
     let random_key = generate_random_string(4);
     let mut is_verified = 0;
-    if claims.sub != "" {
+    if !claims.sub.is_empty() {
         is_verified = 1;
     }
     let result = sqlx::query!(
@@ -203,32 +211,35 @@ pub async fn create_short_url_handler(
         payload.head_html,
         is_verified
     )
-        .execute(&state.db_pool)
-        .await;
+    .execute(&state.db_pool)
+    .await;
 
     match result {
         Ok(result) => {
             let id = result.last_insert_rowid();
             let unique_key = match id_to_key(id) {
                 Some(key) => key,
-                None => return (StatusCode::INTERNAL_SERVER_ERROR, "ID conversion failed").into_response(),
+                None => {
+                    return (StatusCode::INTERNAL_SERVER_ERROR, "ID conversion failed")
+                        .into_response()
+                }
             };
             // Add to cache
             let short_key = merge_short_key(&random_key, &unique_key);
-            if claims.sub == "" {
+            if claims.sub.is_empty() {
                 let code = generate_random_string(8);
                 let expires_at = Utc::now() + Duration::minutes(5);
                 let expires_at_str = expires_at.naive_utc().to_string();
                 let _ = sqlx::query!(
-                r#"
+                    r#"
                 INSERT INTO email_auth (short_key, code, expires_at) VALUES (?, ?, ?)
                 "#,
-                short_key,
-                code,
-                expires_at_str
-            )
-                    .execute(&state.db_pool)
-                    .await;
+                    short_key,
+                    code,
+                    expires_at_str
+                )
+                .execute(&state.db_pool)
+                .await;
                 tokio::spawn(async move {
                     if let Err(e) = send_email(payload.email, code).await {
                         println!("Failed to send email: {}", e);
@@ -252,8 +263,8 @@ pub async fn create_short_url_handler(
                                     head_html,
                                     id,
                                 )
-                                    .execute(&state.db_pool)
-                                    .await;
+                                .execute(&state.db_pool)
+                                .await;
                             }
                         }
                         Err(e) => println!("Failed to fetch head HTML: {}", e),
@@ -264,7 +275,11 @@ pub async fn create_short_url_handler(
             let protocol = &envs.server_protocol;
             let host = &envs.server_host;
             let port = &envs.server_port;
-            let domain = if port != "80" && port != "443" { format!("{}:{}", host, port) } else { host.to_string() };
+            let domain = if port != "80" && port != "443" {
+                format!("{}:{}", host, port)
+            } else {
+                host.to_string()
+            };
             let response = CreateUrlResponse {
                 is_created: true,
                 short_url: format!("{}://{}/{}", protocol, domain, short_key),

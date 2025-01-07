@@ -44,7 +44,7 @@ pub fn split_short_key(short_key: &str) -> (String, String) {
 /// Merge Short Key
 /// Combines a 4-character random key and a unique string to generate a ShortKey.
 pub fn merge_short_key(random_key: &str, unique_key: &str) -> String {
-    (&random_key[..2]).to_string() + &unique_key + &random_key[2..]
+    random_key[..2].to_string() + unique_key + &random_key[2..]
 }
 
 #[cfg(test)]
@@ -58,7 +58,7 @@ mod tests {
         assert_eq!(id_to_key(-1), None);
 
         // Single character
-        assert_eq!(id_to_key(1), Some("a".to_string()));  // 'a'
+        assert_eq!(id_to_key(1), Some("a".to_string())); // 'a'
         assert_eq!(id_to_key(26), Some("z".to_string())); // 'z'
         assert_eq!(id_to_key(27), Some("A".to_string())); // 'A'
         assert_eq!(id_to_key(52), Some("Z".to_string())); // 'Z'
@@ -74,7 +74,7 @@ mod tests {
     #[test]
     fn test_round_trip() {
         let test_values = [
-            1, 2, 25, 26, 27, 52, 53, 62, 63, 64, 100, 999, 1000, 99999999
+            1, 2, 25, 26, 27, 52, 53, 62, 63, 64, 100, 999, 1000, 99999999,
         ];
 
         for &id in &test_values {
@@ -114,7 +114,10 @@ mod tests {
 
         // Edge case: String too short to extract
         let result = std::panic::catch_unwind(|| split_short_key("abc"));
-        assert!(result.is_err(), "Expected a panic for short key too short to split");
+        assert!(
+            result.is_err(),
+            "Expected a panic for short key too short to split"
+        );
     }
 
     #[test]
@@ -136,7 +139,6 @@ mod tests {
         assert_eq!(unique_key, "<>");
         assert_eq!(random_key, "a19x");
     }
-
 
     #[test]
     fn test_merge_short_key_basic() {
@@ -165,7 +167,10 @@ mod tests {
             }
             merge_short_key("abc", "XY")
         });
-        assert!(result.is_err(), "Expected a panic for random key less than 4 characters");
+        assert!(
+            result.is_err(),
+            "Expected a panic for random key less than 4 characters"
+        );
 
         let result = std::panic::catch_unwind(|| {
             if "abcdef".len() != 4 {
@@ -173,7 +178,10 @@ mod tests {
             }
             merge_short_key("abcdef", "XY")
         });
-        assert!(result.is_err(), "Expected a panic for random key more than 4 characters");
+        assert!(
+            result.is_err(),
+            "Expected a panic for random key more than 4 characters"
+        );
     }
 
     #[test]

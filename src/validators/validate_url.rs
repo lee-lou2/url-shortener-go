@@ -6,9 +6,7 @@ pub fn validate_email(email: &str) -> Result<bool, String> {
     if email.is_empty() {
         return Err("Email is missing.".to_string());
     }
-    let email_regex = Regex::new(
-        r#"(?i)^[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}$"#
-    ).unwrap();
+    let email_regex = Regex::new(r#"(?i)^[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}$"#).unwrap();
     if !email_regex.is_match(email) {
         return Err("Invalid email format.".to_string());
     }
@@ -49,18 +47,36 @@ mod tests {
     fn test_validate_email() {
         // Valid cases
         assert_eq!(validate_email("test@example.com"), Ok(true));
-        assert_eq!(validate_email("user.name+tag+sorting@example.com"), Ok(true));
+        assert_eq!(
+            validate_email("user.name+tag+sorting@example.com"),
+            Ok(true)
+        );
         assert_eq!(validate_email("user@subdomain.example.com"), Ok(true));
         assert_eq!(validate_email("USER@EXAMPLE.COM"), Ok(true));
         assert_eq!(validate_email("simple@example.co.uk"), Ok(true));
 
         // Invalid cases
         assert_eq!(validate_email(""), Err("Email is missing.".to_string()));
-        assert_eq!(validate_email("plainaddress"), Err("Invalid email format.".to_string()));
-        assert_eq!(validate_email("@missingusername.com"), Err("Invalid email format.".to_string()));
-        assert_eq!(validate_email("username.com"), Err("Invalid email format.".to_string()));
-        assert_eq!(validate_email("username@.com"), Err("Invalid email format.".to_string()));
-        assert_eq!(validate_email("username@com"), Err("Invalid email format.".to_string()));
+        assert_eq!(
+            validate_email("plainaddress"),
+            Err("Invalid email format.".to_string())
+        );
+        assert_eq!(
+            validate_email("@missingusername.com"),
+            Err("Invalid email format.".to_string())
+        );
+        assert_eq!(
+            validate_email("username.com"),
+            Err("Invalid email format.".to_string())
+        );
+        assert_eq!(
+            validate_email("username@.com"),
+            Err("Invalid email format.".to_string())
+        );
+        assert_eq!(
+            validate_email("username@com"),
+            Err("Invalid email format.".to_string())
+        );
     }
 
     #[test]
@@ -68,17 +84,38 @@ mod tests {
         // Valid cases
         assert_eq!(validate_url("http://example.com"), Ok(true));
         assert_eq!(validate_url("https://www.example.com"), Ok(true));
-        assert_eq!(validate_url("https://example.com/path?query=string"), Ok(true));
+        assert_eq!(
+            validate_url("https://example.com/path?query=string"),
+            Ok(true)
+        );
         assert_eq!(validate_url("https://example.com:8080"), Ok(true));
         assert_eq!(validate_url("http://localhost"), Ok(true));
 
         // Invalid cases
-        assert_eq!(validate_url(""), Err("The URL format is invalid.".to_string()));
-        assert_eq!(validate_url("example.com"), Err("The URL format is invalid.".to_string()));
-        assert_eq!(validate_url("ftp://example.com"), Err("The URL format is invalid.".to_string()));
-        assert_eq!(validate_url("http//example.com"), Err("The URL format is invalid.".to_string()));
-        assert_eq!(validate_url("http:/example.com"), Err("The URL format is invalid.".to_string()));
-        assert_eq!(validate_url("://example.com"), Err("The URL format is invalid.".to_string()));
+        assert_eq!(
+            validate_url(""),
+            Err("The URL format is invalid.".to_string())
+        );
+        assert_eq!(
+            validate_url("example.com"),
+            Err("The URL format is invalid.".to_string())
+        );
+        assert_eq!(
+            validate_url("ftp://example.com"),
+            Err("The URL format is invalid.".to_string())
+        );
+        assert_eq!(
+            validate_url("http//example.com"),
+            Err("The URL format is invalid.".to_string())
+        );
+        assert_eq!(
+            validate_url("http:/example.com"),
+            Err("The URL format is invalid.".to_string())
+        );
+        assert_eq!(
+            validate_url("://example.com"),
+            Err("The URL format is invalid.".to_string())
+        );
     }
 
     #[test]
@@ -89,8 +126,14 @@ mod tests {
         assert_eq!(validate_webhook_url(""), Ok(true)); // empty input is allowed
 
         // Invalid cases
-        assert_eq!(validate_webhook_url("invalid_url"), Err("The URL format is invalid.".to_string()));
-        assert_eq!(validate_webhook_url("ftp://example.com"), Err("The URL format is invalid.".to_string()));
+        assert_eq!(
+            validate_webhook_url("invalid_url"),
+            Err("The URL format is invalid.".to_string())
+        );
+        assert_eq!(
+            validate_webhook_url("ftp://example.com"),
+            Err("The URL format is invalid.".to_string())
+        );
     }
 
     #[test]
@@ -101,7 +144,13 @@ mod tests {
         assert_eq!(validate_fallback_url(""), Ok(true)); // empty input is allowed
 
         // Invalid cases
-        assert_eq!(validate_fallback_url("invalid_url"), Err("The URL format is invalid.".to_string()));
-        assert_eq!(validate_fallback_url("example.com"), Err("The URL format is invalid.".to_string()));
+        assert_eq!(
+            validate_fallback_url("invalid_url"),
+            Err("The URL format is invalid.".to_string())
+        );
+        assert_eq!(
+            validate_fallback_url("example.com"),
+            Err("The URL format is invalid.".to_string())
+        );
     }
 }

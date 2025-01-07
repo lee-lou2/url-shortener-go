@@ -27,7 +27,7 @@ pub async fn jwt_auth_middleware(mut req: Request<Body>, next: Next) -> impl Int
                 let envs = crate::config::get_environments();
                 if let Ok(data) = decode::<Claims>(
                     token,
-                    &DecodingKey::from_secret(&envs.jwt_secret.as_bytes()),
+                    &DecodingKey::from_secret(envs.jwt_secret.as_bytes()),
                     &Validation::default(),
                 ) {
                     claims = data.claims;

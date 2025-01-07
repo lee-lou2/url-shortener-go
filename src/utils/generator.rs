@@ -36,7 +36,11 @@ mod tests {
     fn test_generate_random_string_with_zero_length() {
         let length = 0;
         let random_string = generate_random_string(length);
-        assert_eq!(random_string.len(), length, "Random string with length 0 should be empty.");
+        assert_eq!(
+            random_string.len(),
+            length,
+            "Random string with length 0 should be empty."
+        );
     }
 
     #[test]
@@ -44,7 +48,11 @@ mod tests {
         let length = 32;
         let random_string = generate_random_string(length);
         for ch in random_string.chars() {
-            assert!(ch.is_alphanumeric(), "Character '{}' is not alphanumeric.", ch);
+            assert!(
+                ch.is_alphanumeric(),
+                "Character '{}' is not alphanumeric.",
+                ch
+            );
         }
     }
 
@@ -52,6 +60,10 @@ mod tests {
     fn test_generate_random_string_large_length() {
         let length = 1000;
         let random_string = generate_random_string(length);
-        assert_eq!(random_string.len(), length, "Random string of 1000 characters should have correct length.");
+        assert_eq!(
+            random_string.len(),
+            length,
+            "Random string of 1000 characters should have correct length."
+        );
     }
 }

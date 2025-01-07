@@ -1,10 +1,10 @@
+mod config;
 mod handlers;
+mod middlewares;
 mod schemas;
 mod state;
 mod utils;
 mod validators;
-mod config;
-mod middlewares;
 
 use axum::{
     middleware::from_fn,
@@ -32,14 +32,23 @@ async fn main() -> Result<(), sqlx::Error> {
     // Configure router
     let app = Router::new()
         .route("/", get(handlers::page_handlers::index_handler))
-        .route("/health", get(handlers::page_handlers::health_check_handler))
+        .route(
+            "/health",
+            get(handlers::page_handlers::health_check_handler),
+        )
         .route(
             "/v1/urls",
             post(handlers::short_url_handlers::create_short_url_handler)
                 .layer(from_fn(middlewares::auth_middlewares::jwt_auth_middleware)),
         )
-        .route("/v1/verify/{code}", get(handlers::verify_handlers::verify_email_handler))
-        .route("/{short_key}", get(handlers::redirect_handlers::redirect_to_original_handler))
+        .route(
+            "/v1/verify/{code}",
+            get(handlers::verify_handlers::verify_email_handler),
+        )
+        .route(
+            "/{short_key}",
+            get(handlers::redirect_handlers::redirect_to_original_handler),
+        )
         .with_state(state)
         .layer(TraceLayer::new_for_http());
 
@@ -48,8 +57,7 @@ async fn main() -> Result<(), sqlx::Error> {
     let protocol = &envs.server_protocol;
     let host = &envs.server_host;
     let port = &envs.server_port;
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port))
-        .await?;
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await?;
     println!("Server running on {}://{}:{}", protocol, host, port);
     axum::serve(listener, app).await?;
     Ok(())
