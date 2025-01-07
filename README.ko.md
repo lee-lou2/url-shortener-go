@@ -238,7 +238,6 @@ pub fn split_short_key(short_key: &str) -> (String, String) {
     - `templates/verify/error.html` 구성
     - `templates/verify/failed.html` 구성
     - 기본값 `your@email.com`에서 이메일 주소 업데이트
-    - `templates/index.html` 의 head 태그 수정
 
 4. 데이터베이스 초기화:
    ```bash
