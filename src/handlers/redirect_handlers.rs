@@ -46,6 +46,11 @@ pub async fn redirect_to_original_handler(
     State(state): State<AppState>,
     req: Request<Body>,
 ) -> impl IntoResponse {
+    // validate short key
+    if let Err(e) = crate::validators::validate_short_key::validate_short_key(&short_key) {
+        return (StatusCode::BAD_REQUEST, e).into_response();
+    }
+
     // Check Legacy url
     if short_key.len() == 4 {
         let legacy_data = include_str!("../legacy.json");
