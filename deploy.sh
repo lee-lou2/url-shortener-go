@@ -15,5 +15,4 @@ docker run --name ${IMAGE_NAME} \
   -w /app \
   -d \
   -p ${INTERNAL_SERVER_PORT}:${EXTERNAL_SERVER_PORT} \
-  ${IMAGE_NAME}:${IMAGE_TAG} \
-  sh -c "cargo run --release && ./target/release/url-shortener"
+  ${IMAGE_NAME}:${IMAGE_TAG}

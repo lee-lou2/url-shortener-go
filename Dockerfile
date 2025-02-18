@@ -11,3 +11,9 @@ RUN apt-get update && apt-get install -y \
     libfindbin-libs-perl
 
 ENV OPENSSL_NO_VENDOR=1
+
+COPY . /usr/src/app
+WORKDIR /usr/src/app
+RUN cargo build --release
+
+CMD ["./target/release/rust-url-shortener"]
