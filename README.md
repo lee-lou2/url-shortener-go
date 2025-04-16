@@ -19,6 +19,7 @@ A modern URL shortening service that features deep link handling and platform-sp
 | Email Verification | Simple URL security through email verification without account creation |
 | Fallback Support | Configurable fallback URLs when apps aren't installed |
 | Webhook Integration | Track link usage with real-time access logs |
+| QR Code Generation | Convert URLs into scannable QR codes for easy sharing |
 
 ### Core Technology
 
@@ -206,6 +207,16 @@ Manages redirects:
    - Cache update
    - User redirect
    - Analytics webhook
+
+#### 5. `GET /v1/qr`
+Generates QR Code:
+- **Description**: Generates a QR code image for a given URL.
+- **Query Parameters**:
+  - `url` (required): The URL to encode in the QR code (should be URL-encoded).
+  - `size` (optional): Desired size of the QR code image in `WxH` format (e.g., `256x256`). Defaults to `256x256`.
+  - `color` (optional): Foreground color of the QR code modules. Can be a color name (e.g., `black`, `red`) or a hex code (e.g., `#FF0000`). Defaults to `black`.
+  - `bg` (optional): Background color of the QR code. Can be a color name (e.g., `white`, `blue`) or a hex code (e.g., `#00FF00`). Defaults to transparent (`#FFFFFF00`).
+- **Response**: A PNG image of the generated QR code with `image/png` content type.
 
 ## Getting Started
 

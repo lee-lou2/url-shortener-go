@@ -49,6 +49,7 @@ async fn main() -> Result<(), sqlx::Error> {
             "/{short_key}",
             get(handlers::redirect_handlers::redirect_to_original_handler),
         )
+        .route("/v1/qr", get(handlers::qr_handlers::generate_qr_handler))
         .with_state(state)
         .layer(TraceLayer::new_for_http());
 
