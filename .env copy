@@ -1,0 +1,20 @@
+# SERVER
+SERVER_PORT=
+JWT_SECRET=
+ENCRYPT_COOKIE_KEY=
+RUN_MIGRATIONS=true  # Control with environment variables to skip automatic migrations in test environments
+
+# DATABASE
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=
+DB_PASSWORD=
+DB_NAME=
+
+# REDIS
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# SENTRY
+SENTRY_DSN=

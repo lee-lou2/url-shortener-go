@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{.Object.OGTitle}}</title>
+    <meta name="description" content="{{.Object.OGDescription}}">
+    <meta name="image" content="{{.Object.OGImageUrl}}">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="{{.Object.OGTitle}}">
+    <meta property="og:description" content="{{.Object.OGDescription}}">
+    <meta property="og:image" content="{{.Object.OGImageUrl}}">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{.Object.OGTitle}}">
+    <meta name="twitter:description" content="{{.Object.OGDescription}}">
+    <meta name="twitter:image" content="{{.Object.OGImageUrl}}">
+
+    <!-- Schema.org -->
+    <meta itemprop="name" content="{{.Object.OGTitle}}">
+    <meta itemprop="description" content="{{.Object.OGDescription}}">
+    <meta itemprop="image" content="{{.Object.OGImageUrl}}">
+
+    <!-- Apple/iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="{{.Object.OGTitle}}">
+
+    <!-- Microsoft -->
+    <meta name="msapplication-TileImage" content="{{.Object.OGImageUrl}}">
+</head>
+
+<body>
+    <script>
+        window.onload = function () {
+            const default_fallback_url = '{{.Object.DefaultFallbackUrl}}';
+            const deeplink_ios = '{{.Object.IOSDeepLink}}';
+            const fallback_url_ios = '{{.Object.IOSFallbackUrl}}' || default_fallback_url;
+            const deeplink_android = '{{.Object.AndroidDeepLink}}';
+            const fallback_url_android = '{{.Object.AndroidFallbackUrl}}' || default_fallback_url;
+
+            function isAndroid() {
+                return /Android/i.test(navigator.userAgent);
+            }
+
+            function isiOS() {
+                return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            }
+
+            if (isAndroid()) {
+                if (deeplink_android) {
+                    // Attempt Android deeplink
+                    window.location.href = deeplink_android;
+                    setTimeout(function () {
+                        // If the app is not installed, redirect to fallback URL
+                        window.location.href = fallback_url_android;
+                    }, 2000);
+                } else {
+                    // If no Android deeplink, redirect directly to fallback URL
+                    window.location.href = fallback_url_android;
+                }
+            } else if (isiOS()) {
+                if (deeplink_ios) {
+                    // Attempt iOS deeplink
+                    window.location.href = deeplink_ios;
+                    setTimeout(function () {
+                        // If the app is not installed, redirect to fallback URL
+                        window.location.href = fallback_url_ios;
+                    }, 2000);
+                } else {
+                    // If no iOS deeplink, redirect directly to fallback URL
+                    window.location.href = fallback_url_ios;
+                }
+            } else {
+                // If not iOS or Android, redirect to the default fallback URL
+                window.location.href = default_fallback_url;
+            }
+        }
+    </script>
+</body>
+
+</html>

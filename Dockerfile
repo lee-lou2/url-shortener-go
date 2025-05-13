@@ -1,41 +1,21 @@
-# Build stage
-FROM rust:1.83 as builder
+FROM golang:1.24 AS builder
 
-# Install necessary build dependencies
-RUN apt-get update && apt-get install -y \
-    pkg-config \
-    libssl-dev \
-    perl \
-    libfindbin-libs-perl
-
-# OpenSSL configuration (use system OpenSSL during build)
-ENV OPENSSL_NO_VENDOR=1
-
-# Set working directory and copy source code
 WORKDIR /usr/src/app
-COPY Cargo.toml Cargo.lock ./
-COPY src ./src
-COPY .env ./
-COPY sqlite3.db ./
 
-# Build the app (release mode)
-RUN cargo build --release
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
 
-# Runtime stage
-FROM debian:bookworm-slim
+COPY . .
 
-# Install runtime dependencies (only libssl3 is needed)
-RUN apt-get update && apt-get install -y \
-    libssl3 \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
 
-# Copy the binary generated in the build stage
-COPY --from=builder /usr/src/app/target/release/rust-url-shortener /usr/local/bin/
-COPY --from=builder /usr/src/app/.env /app/
+FROM alpine:3.21
 
-# Set working directory
-WORKDIR /app
+RUN apk --no-cache add ca-certificates
 
-# Execution command
-CMD ["/usr/local/bin/rust-url-shortener"]
+WORKDIR /root/
+
+COPY --from=builder /usr/src/app/.env .env
+COPY --from=builder /usr/src/app/app .
+
+CMD ["./app"]
