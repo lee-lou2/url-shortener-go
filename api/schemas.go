@@ -20,8 +20,8 @@ var validate = validator.New()
 //   - AndroidFallbackUrl: URL to redirect when Android app is not installed (optional, must be URL format)
 //   - DefaultFallbackUrl: Default redirect URL (required, must be URL format)
 //   - WebhookUrl: Webhook URL (optional, must be URL format)
-//   - OGTitle: Open Graph title (optional)
-//   - OGDescription: Open Graph description (optional)
+//   - OGTitle: Open Graph title (optional, max 255 characters)
+//   - OGDescription: Open Graph description (optional, max 500 characters)
 //   - OGImageUrl: Open Graph image URL (optional, must be URL format)
 type createShortUrlRequest struct {
 	IOSDeepLink        string `json:"iosDeepLink" validate:"omitempty,url"`
@@ -30,8 +30,8 @@ type createShortUrlRequest struct {
 	AndroidFallbackUrl string `json:"androidFallbackUrl" validate:"omitempty,url"`
 	DefaultFallbackUrl string `json:"defaultFallbackUrl" validate:"required,url"`
 	WebhookUrl         string `json:"webhookUrl" validate:"omitempty,url"`
-	OGTitle            string `json:"ogTitle" validate:"omitempty,max=255"`       // Example: Added maximum length limit
-	OGDescription      string `json:"ogDescription" validate:"omitempty,max=500"` // Example: Added maximum length limit
+	OGTitle            string `json:"ogTitle" validate:"omitempty,max=255"`
+	OGDescription      string `json:"ogDescription" validate:"omitempty,max=500"`
 	OGImageUrl         string `json:"ogImageUrl" validate:"omitempty,url"`
 }
 
