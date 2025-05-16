@@ -1,6 +1,6 @@
 # URL 단축 서비스 (Golang)
 
-[한국어](README.ko.md) | [English](README.md)
+[한국어](README.md) | [English](README.en.md)
 
 🚀 **데모 사이트:** [https://f-it.kr](https://f-it.kr)
 
