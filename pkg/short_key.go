@@ -23,10 +23,7 @@ func SplitShortKey(shortKey string) (uint64, string) {
 	backRandomKey := shortKey[len(shortKey)-1:]
 	randKey := frontRandomKey + backRandomKey
 	uniqueKey := shortKey[1 : len(shortKey)-1]
-	id, err := base62.StdEncoding.ParseUint([]byte(uniqueKey))
-	if err != nil {
-		return 0, ""
-	}
+	id, _ := base62.StdEncoding.ParseUint([]byte(uniqueKey))
 	return id, randKey
 }
 
