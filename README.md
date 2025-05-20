@@ -2,7 +2,7 @@
 
 [한국어](README.ko.md) | [English](README.md)
 
-🚀 **데모 사이트:** [https://f-it.kr](https://f-it.kr)
+🚀 **데모 사이트:** [https://url.lou2.kr](https://url.lou2.kr)
 
 ![demo site](docs/screenshot.png)
 

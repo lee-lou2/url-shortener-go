@@ -16,6 +16,7 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 COPY --from=builder /usr/src/app/.env .env
+COPY --from=builder /usr/src/app/views ./views
 COPY --from=builder /usr/src/app/app .
 
 CMD ["./app"]

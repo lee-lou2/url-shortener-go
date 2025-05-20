@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"url-shortener-go/config"
 
 	"gorm.io/gorm"
@@ -84,7 +83,7 @@ func (u *Url) SendWebHook(shortKey, userAgent string) error {
 // init function runs automatically when the package is loaded,
 // performing database migration to create the table corresponding to the Url model.
 func init() {
-	if os.Getenv("RUN_MIGRATIONS") == "true" {
+	if config.GetEnv("RUN_MIGRATIONS", "true") == "true" {
 		db := config.GetDB()
 		if db != nil {
 			_ = db.AutoMigrate(&Url{})
